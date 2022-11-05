@@ -4,14 +4,14 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 
-name:           InfinitaRecursion15
+name:           SafeDB
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/InfinitaRecursion15#readme>
-homepage:       https://github.com/githubuser/InfinitaRecursion15#readme
-bug-reports:    https://github.com/githubuser/InfinitaRecursion15/issues
-author:         Author name here
+description:    Please see the README on GitHub at <https://github.com/FabianVegaA/SafeDB#readme>
+homepage:       https://github.com/FabianVegaA/SafeDB#readme
+bug-reports:    https://github.com/FabianVegaA/SafeDB/issues
+author:         Fabián Vega Alcota
 maintainer:     example@example.com
-copyright:      2022 Author name here
+copyright:      2022 Fabián Vega Alcota
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -21,7 +21,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/InfinitaRecursion15
+  location: https://github.com/FabianVegaA/SafeDB
 
 library
   exposed-modules:
@@ -30,7 +30,7 @@ library
       Lib
       Record
   other-modules:
-      Paths_InfinitaRecursion15
+      Paths_SafeDB
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
@@ -41,31 +41,31 @@ library
     , strict
   default-language: Haskell2010
 
-executable InfinitaRecursion15-exe
+executable SafeDB-exe
   main-is: Main.hs
   other-modules:
-      Paths_InfinitaRecursion15
+      Paths_SafeDB
   hs-source-dirs:
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      InfinitaRecursion15
+      SafeDB
     , aeson
     , base >=4.7 && <5
     , bytestring
     , strict
   default-language: Haskell2010
 
-test-suite InfinitaRecursion15-test
+test-suite SafeDB-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_InfinitaRecursion15
+      Paths_SafeDB
   hs-source-dirs:
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      InfinitaRecursion15
+      SafeDB
     , aeson
     , base >=4.7 && <5
     , bytestring
