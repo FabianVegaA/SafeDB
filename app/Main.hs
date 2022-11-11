@@ -1,18 +1,27 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main (main) where
 
-import Free (Free (..))
+import Data.Aeson ((.=))
+import Data.Aeson.Types (object)
+import Data.Text (Text)
 import Interpret (runDB)
-import Lib (Operation (..), done, initDB, set, showDB)
-import Record (Person (..))
+import Lib (done, get, initDB, insert)
 
 main :: IO ()
-main = runDB program
-
-program :: Free (Operation Int Person) ()
-program = do
+main = runDB $ do
   initDB
-  set 1 $ Person "John" 30
-  showDB 1
-  set 1 $ Person "John" 31
-  showDB 10
+  insert $
+    object
+      [ "name" .= ("John" :: Text),
+        "age" .= (30 :: Int)
+      ]
+  insert $
+    object
+      [ "name" .= ("Jane" :: Text),
+        "age" .= (25 :: Int),
+        "address" .= ("123 Main St" :: Text)
+      ]
+  get 1
+  get 2
   done
