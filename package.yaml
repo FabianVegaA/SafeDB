@@ -24,6 +24,9 @@ dependencies:
 - strict
 - aeson
 - bytestring
+- containers
+- text
+- aeson-pretty
 
 ghc-options:
 - -Wall
