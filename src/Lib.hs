@@ -1,11 +1,11 @@
 module Lib
   ( initDB,
     get,
-    set,
+    insert,
     done,
-    showDB,
     Operation (..),
     OperationFail (..),
+    DBOperation,
   )
 where
 
@@ -14,20 +14,19 @@ import Free (Free (..), liftF)
 data Operation key value next
   = Init next
   | Get key next
-  | Set key value next
-  | Show key next
+  | Insert value next
   | Done
 
 instance Functor (Operation key value) where
   fmap f (Init next) = Init (f next)
   fmap f (Get key next) = Get key (f next)
-  fmap f (Set key value next) = Set key value (f next)
-  fmap f (Show key next) = Show key (f next)
+  fmap f (Insert value next) = Insert value (f next)
   fmap _ Done = Done
 
 data OperationFail
   = KeyNotFound
   | RecordNotConsistent
+  | DBConnectionError
   deriving (Show)
 
 initDB :: Free (Operation key value) ()
@@ -36,11 +35,10 @@ initDB = liftF (Init ())
 get :: key -> Free (Operation key value) ()
 get key = liftF (Get key ())
 
-set :: key -> value -> Free (Operation key value) ()
-set key value = liftF (Set key value ())
+insert :: value -> Free (Operation key value) ()
+insert value = liftF (Insert value ())
 
-showDB :: key -> Free (Operation key value) ()
-showDB key = liftF (Show key ())
-
-done :: Free (Operation key value) r
+done :: Free (Operation key value) ()
 done = liftF Done
+
+type DBOperation value = Free (Operation Int value)
