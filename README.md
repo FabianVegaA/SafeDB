@@ -20,15 +20,21 @@ With the program
 
 ```Haskell
 main :: IO ()
-main = runDB program
-
-program :: Free (Operation Int Person) ()
-program = do
+main = runDB $ do
   initDB
-  set 1 $ Person "John" 30
-  showDB 1
-  set 1 $ Person "John" 31
-  showDB 10
+  insert $
+    object
+      [ "name" .= ("John" :: Text),
+        "age" .= (30 :: Int)
+      ]
+  insert $
+    object
+      [ "name" .= ("Jane" :: Text),
+        "age" .= (25 :: Int),
+        "address" .= ("123 Main St" :: Text)
+      ]
+  get 1
+  get 2
   done
 ```
 
@@ -37,6 +43,26 @@ You will get
 ```bash
 $ stack run
 Starting DB with default connection (test.fiabledb)
-Records: [Record {identifier = 1, value = Person {name = "John", age = 30}, version = 1}]
-SafeDB-exe: user error (KeyNotFound)
+Records found: [
+    {
+        "id": 1,
+        "value": 1,
+        "version": {
+            "age": 30,
+            "name": "John"
+        }
+    }
+]
+Records found: [
+    {
+        "id": 2,
+        "value": 1,
+        "version": {
+            "address": "123 Main St",
+            "age": 25,
+            "name": "Jane"
+        }
+    }
+]
+Closing DB connection
 ```
