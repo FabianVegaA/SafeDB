@@ -6,7 +6,7 @@ import Data.Aeson ((.=))
 import Data.Aeson.Types (object)
 import Data.Text (Text)
 import Interpret (runDB)
-import Lib (done, get, initDB, insert)
+import Lib (done, get, initDB, insert, update)
 
 main :: IO ()
 main = runDB $ do
@@ -23,5 +23,10 @@ main = runDB $ do
         "address" .= ("123 Main St" :: Text)
       ]
   get 1
-  get 2
+  update 1 $
+    object
+      [ "name" .= ("John" :: Text),
+        "age" .= (31 :: Int)
+      ]
+  get 1
   done
