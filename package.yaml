@@ -27,6 +27,7 @@ dependencies:
 - containers
 - text
 - aeson-pretty
+- directory
 
 ghc-options:
 - -Wall
