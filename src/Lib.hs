@@ -11,6 +11,7 @@ module Lib
 where
 
 import Free (Free (..), liftF)
+import Control.Exception (Exception)
 
 data Operation key value next
   = Init next
@@ -30,7 +31,10 @@ data OperationFail
   = KeyNotFound
   | RecordNotConsistent
   | DBConnectionError
+  | CorruptedDB String
   deriving (Show)
+
+instance Exception OperationFail
 
 initDB :: Free (Operation key value) ()
 initDB = liftF (Init ())
