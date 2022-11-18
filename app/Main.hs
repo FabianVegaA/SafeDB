@@ -9,7 +9,7 @@ import Interpret (runDB)
 import Lib (done, get, initDB, insert, update)
 
 main :: IO ()
-main = runDB $ do
+main = runDB (Just "test.fiabledb") $ do
   initDB
   insert $
     object
