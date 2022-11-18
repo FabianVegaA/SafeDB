@@ -5,3 +5,6 @@
 
 # Stack
 stack.yaml.lock
+
+dist-newstyle/
+dist/
