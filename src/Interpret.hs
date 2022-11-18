@@ -14,7 +14,11 @@ import Record (Record (..))
 import System.Directory (doesFileExist)
 import qualified System.IO.Strict as S
 
-runDB :: (ToJSON a, FromJSON a, Show a, Show b) => Maybe FilePath -> DBOperation a b -> IO ()
+runDB ::
+  (ToJSON a, FromJSON a, Show a, Show b) =>
+  Maybe FilePath ->
+  DBOperation a b ->
+  IO ()
 runDB _ (Pure err) = throwIO . userError . show $ err
 runDB maybePath (Free a) = case a of
   Init next -> do
@@ -24,24 +28,23 @@ runDB maybePath (Free a) = case a of
           then "custom connection (" ++ fromMaybe "" maybePath ++ ")"
           else "default connection (test.fiabledb)"
       ]
-    tryConnectDB $ \_ -> runDB (pure path) next
-  Get key next -> tryRecover key $ \recovered _ -> do
+    tryConnectDB $ \_ -> run next
+  Get key next -> continue next . tryRecover key $ \recovered _ -> do
     putStr "Records found: "
     B.putStrLn . encodePretty $ recovered
-    runDB (pure path) next
-  Insert val next -> tryConnectDB $ \records -> do
+  Insert val next -> continue next . tryConnectDB $ \records -> do
     let record = Record (length records + 1) 1 val
     writeDB $ record : records
-    runDB (pure path) next
-  Update key val next -> tryRecover key $ \recovered records -> do
+  Update key val next -> continue next . tryRecover key $ \recovered records -> do
     let record = head recovered
     let newRecord = record {rev = rev record + 1, value = val}
     let newRecords = newRecord : recover key records
     writeDB newRecords
-    runDB (pure path) next
   Done -> putStrLn "Closing DB connection..."
   where
     path = fromMaybe "test.fiabledb" maybePath
+    run = runDB (pure path)
+    continue next routine = routine >> run next
 
     tryConnectDB routine = do
       connectDB >>= \case
