@@ -2,7 +2,7 @@
 
 This is a toy inmutable database. It is a simple key-value store.
 
-> **Note:** This is a toy project. It is response to the challenge [InfinitaRecursión](https://newsletter.andros.dev) 15 and onwards.
+> **Note:** This is a toy project. It is response to the challenge [InfinitaRecursión](https://newsletter.andros.dev) 15 and later challenge.
 
 ## Ideas
 
