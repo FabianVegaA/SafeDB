@@ -3,62 +3,65 @@
 module Interpret (runDB) where
 
 import Control.Exception (throwIO)
-import Data.Aeson (FromJSON, ToJSON, decode, encode)
+import Data.Aeson (FromJSON, ToJSON, eitherDecode, encode)
 import Data.Aeson.Encode.Pretty (encodePretty)
 import qualified Data.ByteString.Lazy.Char8 as B
 import Data.ByteString.Lazy.Internal (packChars, unpackChars)
+import Data.Maybe (fromMaybe, isJust)
 import Free (Free (..))
 import Lib (DBOperation, Operation (..), OperationFail (..))
 import Record (Record (..))
 import System.Directory (doesFileExist)
 import qualified System.IO.Strict as S
 
-runDB :: (ToJSON a, FromJSON a, Show a, Show b) => DBOperation a b -> IO ()
-runDB (Pure err) = throwOperation err
-runDB (Free a) = case a of
+runDB :: (ToJSON a, FromJSON a, Show a, Show b) => Maybe FilePath -> DBOperation a b -> IO ()
+runDB _ (Pure err) = throwIO . userError . show $ err
+runDB maybePath (Free a) = case a of
   Init next -> do
-    putStrLn "Starting DB with default connection (test.fiabledb)"
-    tryConnectDB $ \_ -> runDB next
-  Get key next -> tryConnectDB $ \records -> do
+    putStrLn . unwords $
+      [ "Starting DB with",
+        if isJust maybePath
+          then "custom connection (" ++ fromMaybe "" maybePath ++ ")"
+          else "default connection (test.fiabledb)"
+      ]
+    tryConnectDB $ \_ -> runDB (pure path) next
+  Get key next -> tryRecover key $ \recovered _ -> do
     putStr "Records found: "
-    let foundRecords = filter (\r -> identifier r == key) records
-    if null foundRecords
-      then throwOperation KeyNotFound
-      else B.putStrLn . encodePretty $ foundRecords
-    runDB next
+    B.putStrLn . encodePretty $ recovered
+    runDB (pure path) next
   Insert val next -> tryConnectDB $ \records -> do
     let record = Record (length records + 1) 1 val
     writeDB $ record : records
-    runDB next
-  Update key val next -> tryConnectDB $ \records -> do
-    let foundRecords = filter (\r -> identifier r == key) records
-    if null foundRecords
-      then throwOperation KeyNotFound
-      else do
-        let record = head foundRecords
-        let newRecord = record {rev = rev record + 1, value = val}
-        let newRecords = newRecord : filter (\r -> identifier r /= key) records
-        writeDB newRecords
-        runDB next
-  Done -> putStrLn "Closing DB connection"
+    runDB (pure path) next
+  Update key val next -> tryRecover key $ \recovered records -> do
+    let record = head recovered
+    let newRecord = record {rev = rev record + 1, value = val}
+    let newRecords = newRecord : recover key records
+    writeDB newRecords
+    runDB (pure path) next
+  Done -> putStrLn "Closing DB connection..."
   where
+    path = fromMaybe "test.fiabledb" maybePath
+
     tryConnectDB routine = do
       connectDB >>= \case
-        Nothing -> throwOperation DBConnectionError
+        Nothing -> throwIO DBConnectionError
         Just rs -> routine rs
 
     connectDB = do
-      exists <- doesFileExist "test.fiabledb"
+      exists <- doesFileExist path
       if exists
         then do
-          content <- S.readFile "test.fiabledb"
-          return $ decode . packChars $ content
+          content <- S.readFile path
+          case eitherDecode . packChars $ content of
+            Left err -> throwIO $ CorruptedDB err
+            Right rs -> return rs
         else do
           putStrLn "DB file not found"
           putStrLn "You want to create a new DB? (y/n)"
           getLine >>= \case
             "y" -> do
-              writeFile "test.fiabledb" "[]"
+              writeFile path "[]"
               return $ Just []
             "n" -> return Nothing
             _ -> do
@@ -66,10 +69,15 @@ runDB (Free a) = case a of
               connectDB
 
     writeDB rs = do
-      exist <- doesFileExist "test.fiabledb"
+      exist <- doesFileExist path
       if exist
-        then writeFile "test.fiabledb" . unpackChars . encode $ rs
+        then writeFile path . unpackChars . encode $ rs
         else tryConnectDB $ \_ -> writeDB rs
 
-throwOperation :: (Show a) => a -> IO ()
-throwOperation = throwIO . userError . show
+    recover key = filter (\r -> identifier r /= key)
+
+    tryRecover key f = tryConnectDB $ \records -> do
+      let recovered = recover key records
+      if null recovered
+        then throwIO KeyNotFound
+        else f recovered records
