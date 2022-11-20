@@ -2,11 +2,18 @@
 
 module Main (main) where
 
-import Data.Aeson ((.=))
+import Data.Aeson (Value, (.=))
 import Data.Aeson.Types (object)
 import Data.Text (Text)
 import Interpret (runDB)
-import Lib (done, get, initDB, insert, update)
+import Lib (delete, done, get, initDB, insert, update)
+
+instance Semigroup Value where
+  (<>) = undefined
+
+instance Monoid Value where
+  mempty = object []
+  mappend = (<>)
 
 main :: IO ()
 main = runDB (Just "test.fiabledb") $ do
@@ -22,11 +29,11 @@ main = runDB (Just "test.fiabledb") $ do
         "age" .= (25 :: Int),
         "address" .= ("123 Main St" :: Text)
       ]
-  get 1
+  delete 2
+  get 2
   update 1 $
     object
       [ "name" .= ("John" :: Text),
         "age" .= (31 :: Int)
       ]
-  get 1
   done

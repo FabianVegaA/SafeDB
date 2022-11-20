@@ -3,6 +3,7 @@ module Lib
     get,
     insert,
     update,
+    delete,
     done,
     Operation (..),
     OperationFail (..),
@@ -10,14 +11,15 @@ module Lib
   )
 where
 
-import Free (Free (..), liftF)
 import Control.Exception (Exception)
+import Free (Free (..), liftF)
 
 data Operation key value next
   = Init next
   | Get key next
   | Insert value next
   | Update key value next
+  | Delete key next
   | Done
 
 instance Functor (Operation key value) where
@@ -25,6 +27,7 @@ instance Functor (Operation key value) where
   fmap f (Get key next) = Get key (f next)
   fmap f (Insert value next) = Insert value (f next)
   fmap f (Update key value next) = Update key value (f next)
+  fmap f (Delete key next) = Delete key (f next)
   fmap _ Done = Done
 
 data OperationFail
@@ -32,6 +35,7 @@ data OperationFail
   | RecordNotConsistent
   | DBConnectionError
   | CorruptedDB String
+  | AlreadyDeleted Int
   deriving (Show)
 
 instance Exception OperationFail
@@ -47,6 +51,9 @@ insert value = liftF (Insert value ())
 
 update :: key -> value -> Free (Operation key value) ()
 update key value = liftF (Update key value ())
+
+delete :: key -> Free (Operation key value) ()
+delete key = liftF (Delete key ())
 
 done :: Free (Operation key value) ()
 done = liftF Done

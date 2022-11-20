@@ -7,27 +7,25 @@ import Data.Aeson (FromJSON, ToJSON, eitherDecode, encode)
 import Data.Aeson.Encode.Pretty (encodePretty)
 import qualified Data.ByteString.Lazy.Char8 as B
 import Data.ByteString.Lazy.Internal (packChars, unpackChars)
-import Data.Maybe (fromMaybe, isJust)
+import Data.Foldable (maximumBy)
+import Data.Maybe (fromMaybe)
+import Data.Ord (comparing)
 import Free (Free (..))
-import Lib (DBOperation, Operation (..), OperationFail (..))
+import Lib (DBOperation, Operation (..), OperationFail (..), update)
 import Record (Record (..))
 import System.Directory (doesFileExist)
 import qualified System.IO.Strict as S
+import Text.Printf (printf)
 
 runDB ::
-  (ToJSON a, FromJSON a, Show a, Show b) =>
+  (ToJSON a, FromJSON a, Show a, Show b, Monoid a, Eq a) =>
   Maybe FilePath ->
   DBOperation a b ->
   IO ()
 runDB _ (Pure err) = throwIO . userError . show $ err
 runDB maybePath (Free a) = case a of
   Init next -> do
-    putStrLn . unwords $
-      [ "Starting DB with",
-        if isJust maybePath
-          then "custom connection (" ++ fromMaybe "" maybePath ++ ")"
-          else "default connection (test.fiabledb)"
-      ]
+    printf "Starting DB with %s connection\n" (fromMaybe "default" maybePath)
     tryConnectDB $ \_ -> run next
   Get key next -> continue next . tryRecover key $ \recovered _ -> do
     putStr "Records found: "
@@ -38,8 +36,14 @@ runDB maybePath (Free a) = case a of
   Update key val next -> continue next . tryRecover key $ \recovered records -> do
     let record = head recovered
     let newRecord = record {rev = rev record + 1, value = val}
-    let newRecords = newRecord : recover key records
-    writeDB newRecords
+    writeDB $ newRecord : recover key records
+  Delete key next -> tryRecover key $ \recovered _ -> do
+    let lastUpdated = maximumBy (comparing rev) recovered
+    if value lastUpdated == mempty
+      then throwIO (AlreadyDeleted key)
+      else run $ do
+        update key mempty
+        next
   Done -> putStrLn "Closing DB connection..."
   where
     path = fromMaybe "test.fiabledb" maybePath
