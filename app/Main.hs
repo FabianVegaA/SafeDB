@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Main (main) where
 
@@ -20,20 +21,25 @@ main = runDB (Just "test.fiabledb") $ do
   initDB
   insert $
     object
-      [ "name" .= ("John" :: Text),
-        "age" .= (30 :: Int)
+      [ "name" .= ("Xavier" :: Text),
+        "age" .= (29 :: Int),
+        "address"
+          .= object
+            [ "street" .= ("Calle 1" :: Text),
+              "number" .= (123 :: Int)
+            ]
       ]
-  insert $
-    object
-      [ "name" .= ("Jane" :: Text),
-        "age" .= (25 :: Int),
-        "address" .= ("123 Main St" :: Text)
-      ]
-  delete 2
-  get 2
   update 1 $
     object
-      [ "name" .= ("John" :: Text),
-        "age" .= (31 :: Int)
+      [ "name" .= ("Xavier" :: Text),
+        "age" .= (30 :: Int),
+        "address"
+          .= object
+            [ "street" .= ("Siempre Viva" :: Text),
+              "number" .= (123 :: Int)
+            ],
+        "phone" .= ("987654321" :: Text)
       ]
+  delete 1
+  get 1
   done
