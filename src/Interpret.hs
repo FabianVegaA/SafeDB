@@ -30,8 +30,8 @@ runDB maybePath (Free a) = case a of
   Get key next -> continue next . tryRecover key $ \recovered _ -> do
     putStr "Records found: "
     B.putStrLn . encodePretty $ recovered
-  Insert val next -> continue next . tryConnectDB $ \records -> do
-    let record = Record (length records + 1) 1 val
+  Insert value next -> continue next . tryConnectDB $ \records -> do
+    let record = Record {identifier = length records + 1, rev = 1, value = value}
     writeDB $ record : records
   Update key val next -> continue next . tryRecover key $ \recovered records -> do
     let record = head recovered
@@ -81,7 +81,7 @@ runDB maybePath (Free a) = case a of
         then writeFile path . unpackChars . encode $ rs
         else tryConnectDB $ \_ -> writeDB rs
 
-    recover key = filter (\r -> identifier r /= key)
+    recover key = filter (\r -> identifier r == key)
 
     tryRecover key f = tryConnectDB $ \records -> do
       let recovered = recover key records
