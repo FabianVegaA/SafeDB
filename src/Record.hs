@@ -12,7 +12,7 @@ data Record a = Record
   deriving (Show)
 
 instance (FromJSON a) => FromJSON (Record a) where
-  parseJSON = withObject "Record" $ \v -> Record <$> v .: "id" <*> v .: "value" <*> v .: "version"
+  parseJSON = withObject "Record" $ \v -> Record <$> v .: "id" <*> v .: "version" <*> v .: "value"
 
 instance (ToJSON a) => ToJSON (Record a) where
-  toJSON (Record id value version) = object ["id" .= id, "value" .= value, "version" .= version]
+  toJSON (Record id version value) = object ["id" .= id, "version" .= version, "value" .= value]
