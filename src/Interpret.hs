@@ -30,8 +30,8 @@ runDB maybePath (Free a) = case a of
   Get key next -> continue next . tryRecover key $ \recovered _ -> do
     putStr "Records found: "
     B.putStrLn . encodePretty $ recovered
-  Insert value next -> continue next . tryConnectDB $ \records -> do
-    let record = Record {identifier = length records + 1, rev = 1, value = value}
+  Insert val next -> continue next . tryConnectDB $ \records -> do
+    let record = Record {identifier = length records + 1, rev = 1, value = val}
     writeDB $ record : records
   Update key val next -> continue next . tryRecover key $ \recovered records -> do
     let record = head recovered
@@ -65,15 +65,17 @@ runDB maybePath (Free a) = case a of
             Right rs -> return rs
         else do
           putStrLn "DB file not found"
-          putStrLn "You want to create a new DB? (y/n)"
-          getLine >>= \case
-            "y" -> do
-              writeFile path "[]"
-              return $ Just []
-            "n" -> return Nothing
-            _ -> do
-              putStrLn "Invalid option"
-              connectDB
+          putStr "You want to create a new DB? (y/n): "
+          let options =
+                getLine >>= \case
+                  "y" -> do
+                    writeFile path "[]"
+                    return $ Just []
+                  "n" -> return Nothing
+                  _ -> do
+                    putStrLn "Invalid option"
+                    options
+          options
 
     writeDB rs = do
       exist <- doesFileExist path
