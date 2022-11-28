@@ -45,6 +45,7 @@ main = runDB (Just "test.fiabledb") $ do
       ]
   delete 1
   get 1
+  getOne 1
   done
 ```
 
@@ -54,8 +55,7 @@ You will get
 $ stack run
 Starting DB with test.fiabledb connection
 DB file not found
-You want to create a new DB? (y/n)
-y
+You want to create a new DB? (y/n): y
 Records found: [
     {
         "id": 1,
@@ -88,5 +88,10 @@ Records found: [
         "version": 1
     }
 ]
+Last version of record: {
+    "id": 1,
+    "value": {},
+    "version": 3
+}
 Closing DB connection...
 ```
