@@ -14,6 +14,7 @@ import Free (Free (..))
 import Lib (DBOperation, Operation (..), OperationFail (..), update)
 import Record (Record (..))
 import System.Directory (doesFileExist)
+import System.IO (hFlush, stdout)
 import qualified System.IO.Strict as S
 import Text.Printf (printf)
 
@@ -68,7 +69,7 @@ runDB maybePath (Free a) = case a of
             Right rs -> return rs
         else do
           putStrLn "DB file not found"
-          putStr "You want to create a new DB? (y/n): "
+          putStr "You want to create a new DB? (y/n): " >> hFlush stdout
           let options =
                 getLine >>= \case
                   "y" -> do
