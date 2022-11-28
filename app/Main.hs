@@ -7,7 +7,7 @@ import Data.Aeson (Value, (.=))
 import Data.Aeson.Types (object)
 import Data.Text (Text)
 import Interpret (runDB)
-import Lib (delete, done, get, initDB, insert, update)
+import Lib (delete, done, get, getOne, initDB, insert, update)
 
 instance Semigroup Value where
   (<>) = undefined
@@ -42,4 +42,5 @@ main = runDB (Just "test.fiabledb") $ do
       ]
   delete 1
   get 1
+  getOne 1
   done
