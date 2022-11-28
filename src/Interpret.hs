@@ -30,6 +30,9 @@ runDB maybePath (Free a) = case a of
   Get key next -> continue next . tryRecover key $ \recovered _ -> do
     putStr "Records found: "
     B.putStrLn . encodePretty $ recovered
+  GetOne key next -> continue next . tryRecover key $ \recovered _ -> do
+    putStr "Last version of record: "
+    B.putStrLn . encodePretty . maximumBy (comparing rev) $ recovered
   Insert val next -> continue next . tryConnectDB $ \records -> do
     let record = Record {identifier = length records + 1, rev = 1, value = val}
     writeDB $ record : records
