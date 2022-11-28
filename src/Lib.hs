@@ -1,6 +1,7 @@
 module Lib
   ( initDB,
     get,
+    getOne,
     insert,
     update,
     delete,
@@ -17,6 +18,7 @@ import Free (Free (..), liftF)
 data Operation key value next
   = Init next
   | Get key next
+  | GetOne key next
   | Insert value next
   | Update key value next
   | Delete key next
@@ -25,6 +27,7 @@ data Operation key value next
 instance Functor (Operation key value) where
   fmap f (Init next) = Init (f next)
   fmap f (Get key next) = Get key (f next)
+  fmap f (GetOne key next) = GetOne key (f next)
   fmap f (Insert value next) = Insert value (f next)
   fmap f (Update key value next) = Update key value (f next)
   fmap f (Delete key next) = Delete key (f next)
@@ -45,6 +48,9 @@ initDB = liftF (Init ())
 
 get :: key -> Free (Operation key value) ()
 get key = liftF (Get key ())
+
+getOne :: key -> Free (Operation key value) ()
+getOne key = liftF (GetOne key ())
 
 insert :: value -> Free (Operation key value) ()
 insert value = liftF (Insert value ())
